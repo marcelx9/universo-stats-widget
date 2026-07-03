@@ -109,4 +109,12 @@ app.get("/update-widget", async (req, res) => {
 
 app.listen(PORT, () => {
     console.log(`Servidor iniciado en puerto ${PORT}`);
+
+    app.get("/env-check", (req, res) => {
+        res.json({
+            DISCORD_APP_ID: !!process.env.DISCORD_APP_ID,
+            DISCORD_USER_ID: !!process.env.DISCORD_USER_ID,
+            DISCORD_BOT_TOKEN: !!process.env.DISCORD_BOT_TOKEN
+        });
+    });
 });
