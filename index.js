@@ -1,6 +1,7 @@
 const express = require("express");
 const fs = require("fs");
 const path = require("path");
+const cors = require("cors");
 require("dotenv").config();
 
 const app = express();
@@ -47,7 +48,22 @@ app.get("/widget", (req, res) => {
                 { type: 1, name: "last_login", value: String(data.last_login) },
                 { type: 1, name: "friends", value: String(data.friends) },
                 { type: 1, name: "clan", value: String(data.clan) },
-                { type: 1, name: "bedwars", value: `${data.bedwars_wins}W / ${data.bedwars_kills}K` },
+                {
+                    type: 1,
+                    name: "premium",
+                    value: String(data.premium)
+                },
+                {
+                    type:1,
+                    name:"bedwars_wins",
+                    value:String(data.bedwars_wins)
+                },
+
+                {
+                    type:1,
+                    name:"bedwars_kills",
+                    value:String(data.bedwars_kills)
+                },
                 { type: 1, name: "skywars", value: `${data.skywars_wins}W / ${data.skywars_kills}K` },
                 { type: 1, name: "skypit", value: `Lv ${data.skypit_level} / ${data.skypit_kills}K / ${data.skypit_deaths}D` }
             ],
