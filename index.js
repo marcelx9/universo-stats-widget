@@ -7,17 +7,25 @@ require("dotenv").config();
 
 const app = express();
 const PORT = process.env.PORT || 3000;
+
 const DATA_PATH = path.join(__dirname, "data.json");
+const USERS_PATH = path.join(__dirname, "users.json");
 
 app.use(cors());
 app.use(express.json({ limit: "10mb" }));
 
 function readData() {
+    if (!fs.existsSync(DATA_PATH)) return {};
     return JSON.parse(fs.readFileSync(DATA_PATH, "utf8"));
 }
 
 function saveData(data) {
     fs.writeFileSync(DATA_PATH, JSON.stringify(data, null, 2));
+}
+
+function readUsers() {
+    if (!fs.existsSync(USERS_PATH)) return {};
+    return JSON.parse(fs.readFileSync(USERS_PATH, "utf8"));
 }
 
 function buildDiscordPayload(data) {
@@ -70,23 +78,35 @@ app.get("/env-check", (req, res) => {
     res.json({
         DISCORD_APP_ID: !!process.env.DISCORD_APP_ID,
         DISCORD_USER_ID: !!process.env.DISCORD_USER_ID,
-        DISCORD_BOT_TOKEN: !!process.env.DISCORD_BOT_TOKEN
+        DISCORD_BOT_TOKEN: !!process.env.DISCORD_BOT_TOKEN,
+        WIDGET_KEY: !!process.env.WIDGET_KEY
     });
 });
 
 app.post("/admin/update", (req, res) => {
-
     if (req.headers["x-widget-key"] !== process.env.WIDGET_KEY) {
         return res.status(401).json({ error: "No autorizado" });
     }
 
-    saveData(req.body);
+    const users = readUsers();
+    const userKey = req.body.user_key;
+    const discordUserId = users[userKey];
+
+    if (!discordUserId) {
+        return res.status(401).json({ error: "Clave de widget inválida" });
+    }
+
+    const data = {
+        ...req.body,
+        discord_user_id: discordUserId
+    };
+
+    saveData(data);
 
     res.json({
         success: true,
-        data: req.body
+        data
     });
-
 });
 
 app.get("/widget", (req, res) => {
@@ -96,14 +116,19 @@ app.get("/widget", (req, res) => {
 
 app.get("/update-widget", async (req, res) => {
     try {
-        if (!process.env.DISCORD_APP_ID || !process.env.DISCORD_USER_ID || !process.env.DISCORD_BOT_TOKEN) {
+        if (!process.env.DISCORD_APP_ID || !process.env.DISCORD_BOT_TOKEN) {
             throw new Error("Faltan variables de Discord");
         }
 
         const data = readData();
+
+        if (!data.discord_user_id) {
+            throw new Error("Falta discord_user_id. Actualiza primero desde la extensión con una clave válida.");
+        }
+
         const payload = buildDiscordPayload(data);
 
-        const url = `https://discord.com/api/v9/applications/${process.env.DISCORD_APP_ID}/users/${process.env.DISCORD_USER_ID}/identities/0/profile`;
+        const url = `https://discord.com/api/v9/applications/${process.env.DISCORD_APP_ID}/users/${data.discord_user_id}/identities/0/profile`;
 
         const response = await axios.patch(url, payload, {
             headers: {
