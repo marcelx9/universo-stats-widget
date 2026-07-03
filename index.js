@@ -8,19 +8,34 @@ require("dotenv").config();
 const app = express();
 const PORT = process.env.PORT || 3000;
 
-const DATA_PATH = path.join(__dirname, "data.json");
+const DATA_DIR = path.join(__dirname, "data");
 const USERS_PATH = path.join(__dirname, "users.json");
+
+if (!fs.existsSync(DATA_DIR)) {
+    fs.mkdirSync(DATA_DIR);
+}
 
 app.use(cors());
 app.use(express.json({ limit: "10mb" }));
 
-function readData() {
-    if (!fs.existsSync(DATA_PATH)) return {};
-    return JSON.parse(fs.readFileSync(DATA_PATH, "utf8"));
+function getDataPath(userKey) {
+    return path.join(DATA_DIR, `${userKey}.json`);
 }
 
-function saveData(data) {
-    fs.writeFileSync(DATA_PATH, JSON.stringify(data, null, 2));
+function readData(userKey) {
+    if (!userKey) return {};
+
+    const file = getDataPath(userKey);
+
+    if (!fs.existsSync(file)) {
+        return {};
+    }
+
+    return JSON.parse(fs.readFileSync(file, "utf8"));
+}
+
+function saveData(userKey, data) {
+    fs.writeFileSync(getDataPath(userKey), JSON.stringify(data, null, 2));
 }
 
 function readUsers() {
@@ -71,13 +86,20 @@ app.get("/", (req, res) => {
 });
 
 app.get("/stats", (req, res) => {
-    res.json(readData());
+    const userKey = req.query.userKey;
+
+    if (!userKey) {
+        return res.status(400).json({
+            error: "Falta userKey. Usa /stats?userKey=tu-clave"
+        });
+    }
+
+    res.json(readData(userKey));
 });
 
 app.get("/env-check", (req, res) => {
     res.json({
         DISCORD_APP_ID: !!process.env.DISCORD_APP_ID,
-        DISCORD_USER_ID: !!process.env.DISCORD_USER_ID,
         DISCORD_BOT_TOKEN: !!process.env.DISCORD_BOT_TOKEN,
         WIDGET_KEY: !!process.env.WIDGET_KEY
     });
@@ -101,16 +123,25 @@ app.post("/admin/update", (req, res) => {
         discord_user_id: discordUserId
     };
 
-    saveData(data);
+    saveData(userKey, data);
 
     res.json({
         success: true,
+        userKey,
         data
     });
 });
 
 app.get("/widget", (req, res) => {
-    const data = readData();
+    const userKey = req.query.userKey;
+
+    if (!userKey) {
+        return res.status(400).json({
+            error: "Falta userKey. Usa /widget?userKey=tu-clave"
+        });
+    }
+
+    const data = readData(userKey);
     res.json(buildDiscordPayload(data));
 });
 
@@ -120,7 +151,13 @@ app.get("/update-widget", async (req, res) => {
             throw new Error("Faltan variables de Discord");
         }
 
-        const data = readData();
+        const userKey = req.query.userKey;
+
+        if (!userKey) {
+            throw new Error("Falta userKey. Usa /update-widget?userKey=tu-clave");
+        }
+
+        const data = readData(userKey);
 
         if (!data.discord_user_id) {
             throw new Error("Falta discord_user_id. Actualiza primero desde la extensión con una clave válida.");
@@ -139,6 +176,7 @@ app.get("/update-widget", async (req, res) => {
 
         res.json({
             success: true,
+            userKey,
             sent: payload,
             discord: response.data
         });
