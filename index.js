@@ -75,12 +75,18 @@ app.get("/env-check", (req, res) => {
 });
 
 app.post("/admin/update", (req, res) => {
-    if (req.query.key !== process.env.ADMIN_KEY) {
+
+    if (req.headers["x-widget-key"] !== process.env.WIDGET_KEY) {
         return res.status(401).json({ error: "No autorizado" });
     }
 
     saveData(req.body);
-    res.json({ success: true, data: req.body });
+
+    res.json({
+        success: true,
+        data: req.body
+    });
+
 });
 
 app.get("/widget", (req, res) => {
