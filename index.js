@@ -30,13 +30,6 @@ function buildDiscordPayload(data) {
                 { type: 1, name: "first_login", value: String(data.first_login || "") },
                 { type: 1, name: "last_login", value: String(data.last_login || "") },
                 { type: 1, name: "friends", value: String(data.friends || "") },
-                {
-                    type: 3,
-                    name: "player_skin",
-                    value: {
-                        url: String(data.skin_url || "")
-                    }
-                },
                 { type: 1, name: "clan", value: String(data.clan || "") },
                 { type: 1, name: "premium", value: String(data.premium || "") },
                 { type: 1, name: "bedwars_wins", value: String(data.bedwars_wins || "") },
