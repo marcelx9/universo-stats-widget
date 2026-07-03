@@ -150,6 +150,10 @@ app.get("/update-widget", async (req, res) => {
     }
 });
 
+app.get("/users-test", (req, res) => {
+    res.json(readUsers());
+});
+
 app.listen(PORT, () => {
     console.log(`Servidor iniciado en puerto ${PORT}`);
 });
