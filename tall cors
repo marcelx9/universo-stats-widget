@@ -1,0 +1,40 @@
+[1mdiff --git a/test.js b/test.js[m
+[1mdeleted file mode 100644[m
+[1mindex afa129c..0000000[m
+[1m--- a/test.js[m
+[1m+++ /dev/null[m
+[36m@@ -1,33 +0,0 @@[m
+[31m-require("dotenv").config();[m
+[31m-const { chromium } = require("playwright");[m
+[31m-[m
+[31m-async function test() {[m
+[31m-    const user = process.env.UNIVERSO_USER || "statss";[m
+[31m-    const url = `https://stats.universocraft.com/jugador/${user}`;[m
+[31m-[m
+[31m-    const browser = await chromium.launch({[m
+[31m-        headless: false[m
+[31m-    });[m
+[31m-[m
+[31m-    const page = await browser.newPage();[m
+[31m-[m
+[31m-    console.log("Abriendo:", url);[m
+[31m-[m
+[31m-    await page.goto(url, {[m
+[31m-        waitUntil: "domcontentloaded",[m
+[31m-        timeout: 60000[m
+[31m-    });[m
+[31m-[m
+[31m-    await page.waitForTimeout(10000);[m
+[31m-[m
+[31m-    console.log("URL final:", page.url());[m
+[31m-    console.log("Título:", await page.title());[m
+[31m-[m
+[31m-    const text = await page.locator("body").innerText();[m
+[31m-    console.log("Texto:");[m
+[31m-    console.log(text);[m
+[31m-[m
+[31m-    await browser.close();[m
+[31m-}[m
+[31m-[m
+[31m-test().catch(console.error);[m
+\ No newline at end of file[m
