@@ -165,7 +165,7 @@ app.get("/update-widget", async (req, res) => {
 
         const payload = buildDiscordPayload(data);
 
-        const url = `https://discord.com/api/v9/applications/${process.env.DISCORD_APP_ID}/users/${data.discord_user_id}/identities/0/profile`;
+        const url = `https://discord.com/api/v9/applications/${process.env.DISCORD_APP_ID}/users/${data.discord_user_id}/identities/1/profile`;
 
         const response = await axios.patch(url, payload, {
             headers: {
