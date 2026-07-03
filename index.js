@@ -24,13 +24,8 @@ function getDataPath(userKey) {
 
 function readData(userKey) {
     if (!userKey) return {};
-
     const file = getDataPath(userKey);
-
-    if (!fs.existsSync(file)) {
-        return {};
-    }
-
+    if (!fs.existsSync(file)) return {};
     return JSON.parse(fs.readFileSync(file, "utf8"));
 }
 
@@ -50,9 +45,7 @@ function buildDiscordPayload(data) {
         dynamic.push({
             type: 3,
             name: "player_skin",
-            value: {
-                url: String(data.skin_url)
-            }
+            value: { url: String(data.skin_url) }
         });
     }
 
@@ -87,13 +80,9 @@ app.get("/", (req, res) => {
 
 app.get("/stats", (req, res) => {
     const userKey = req.query.userKey;
-
     if (!userKey) {
-        return res.status(400).json({
-            error: "Falta userKey. Usa /stats?userKey=tu-clave"
-        });
+        return res.status(400).json({ error: "Falta userKey. Usa /stats?userKey=tu-clave" });
     }
-
     res.json(readData(userKey));
 });
 
@@ -112,15 +101,16 @@ app.post("/admin/update", (req, res) => {
 
     const users = readUsers();
     const userKey = req.body.user_key;
-    const discordUserId = users[userKey];
+    const userConfig = users[userKey];
 
-    if (!discordUserId) {
+    if (!userConfig || !userConfig.discord_id) {
         return res.status(401).json({ error: "Clave de widget inválida" });
     }
 
     const data = {
         ...req.body,
-        discord_user_id: discordUserId
+        discord_user_id: userConfig.discord_id,
+        identity: userConfig.identity ?? 0
     };
 
     saveData(userKey, data);
@@ -134,11 +124,8 @@ app.post("/admin/update", (req, res) => {
 
 app.get("/widget", (req, res) => {
     const userKey = req.query.userKey;
-
     if (!userKey) {
-        return res.status(400).json({
-            error: "Falta userKey. Usa /widget?userKey=tu-clave"
-        });
+        return res.status(400).json({ error: "Falta userKey. Usa /widget?userKey=tu-clave" });
     }
 
     const data = readData(userKey);
@@ -152,7 +139,6 @@ app.get("/update-widget", async (req, res) => {
         }
 
         const userKey = req.query.userKey;
-
         if (!userKey) {
             throw new Error("Falta userKey. Usa /update-widget?userKey=tu-clave");
         }
@@ -163,9 +149,10 @@ app.get("/update-widget", async (req, res) => {
             throw new Error("Falta discord_user_id. Actualiza primero desde la extensión con una clave válida.");
         }
 
+        const identity = data.identity ?? 0;
         const payload = buildDiscordPayload(data);
 
-        const url = `https://discord.com/api/v9/applications/${process.env.DISCORD_APP_ID}/users/${data.discord_user_id}/identities/1/profile`;
+        const url = `https://discord.com/api/v9/applications/${process.env.DISCORD_APP_ID}/users/${data.discord_user_id}/identities/${identity}/profile`;
 
         const response = await axios.patch(url, payload, {
             headers: {
@@ -177,6 +164,7 @@ app.get("/update-widget", async (req, res) => {
         res.json({
             success: true,
             userKey,
+            identity,
             sent: payload,
             discord: response.data
         });

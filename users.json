@@ -1,4 +1,10 @@
 {
-  "cami-prob123": "893191841695035434",
-  "chisme-poop": "1040834647241789460"
+  "cami-prob123": {
+    "discord_id": "893191841695035434",
+    "identity": 0
+  },
+  "chisme-poop": {
+    "discord_id": "1040834647241789460",
+    "identity": 1
+  }
 }
