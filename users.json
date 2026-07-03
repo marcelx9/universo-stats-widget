@@ -5,7 +5,7 @@
   },
   "chisme-poop": {
     "discord_id": "843655877499813941",
-    "identity": 1
+    "identity": 1,
   },
   "alone-pt3": {
     "discord_id": "1015688387153375292",
@@ -18,5 +18,9 @@
   "prueba-123": {
     "discord_id": "281820232450965504",
     "identity": 4
+  },
+  "spam-123": {
+    "discord_id": "1043581571862630452",
+    "identity": 5
   }
 }
