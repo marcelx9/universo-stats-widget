@@ -86,8 +86,9 @@ app.get("/update-widget", async (req, res) => {
         const response = await fetch(url, {
             method: "PATCH",
             headers: {
-                Authorization: `Bot ${process.env.DISCORD_BOT_TOKEN}`,
-                "Content-Type": "application/json"
+                Authorization: process.env.DISCORD_BOT_TOKEN.startsWith("Bot ")
+                    ? process.env.DISCORD_BOT_TOKEN
+                    : `Bot ${process.env.DISCORD_BOT_TOKEN}`,
             },
             body: JSON.stringify(payload)
         });
