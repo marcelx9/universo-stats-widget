@@ -2,6 +2,7 @@ const express = require("express");
 const fs = require("fs");
 const path = require("path");
 const cors = require("cors");
+const axios = require("axios");
 require("dotenv").config();
 
 const app = express();
@@ -58,6 +59,14 @@ app.get("/stats", (req, res) => {
     res.json(readData());
 });
 
+app.get("/env-check", (req, res) => {
+    res.json({
+        DISCORD_APP_ID: !!process.env.DISCORD_APP_ID,
+        DISCORD_USER_ID: !!process.env.DISCORD_USER_ID,
+        DISCORD_BOT_TOKEN: !!process.env.DISCORD_BOT_TOKEN
+    });
+});
+
 app.post("/admin/update", (req, res) => {
     if (req.query.key !== process.env.ADMIN_KEY) {
         return res.status(401).json({ error: "No autorizado" });
@@ -83,39 +92,29 @@ app.get("/update-widget", async (req, res) => {
 
         const url = `https://discord.com/api/v9/applications/${process.env.DISCORD_APP_ID}/users/${process.env.DISCORD_USER_ID}/identities/0/profile`;
 
-        const response = await fetch(url, {
-            method: "PATCH",
+        const response = await axios.patch(url, payload, {
             headers: {
                 Authorization: process.env.DISCORD_BOT_TOKEN.startsWith("Bot ")
                     ? process.env.DISCORD_BOT_TOKEN
                     : `Bot ${process.env.DISCORD_BOT_TOKEN}`,
-            },
-            body: JSON.stringify(payload)
+                "Content-Type": "application/json"
+            }
         });
 
-        const result = await response.json();
-
         res.json({
-            success: response.ok,
+            success: true,
             sent: payload,
-            discord: result
+            discord: response.data
         });
     } catch (err) {
         res.status(500).json({
             success: false,
-            error: err.message
+            sent: err.config?.data ? JSON.parse(err.config.data) : undefined,
+            discord: err.response?.data || err.message
         });
     }
 });
 
 app.listen(PORT, () => {
     console.log(`Servidor iniciado en puerto ${PORT}`);
-
-    app.get("/env-check", (req, res) => {
-        res.json({
-            DISCORD_APP_ID: !!process.env.DISCORD_APP_ID,
-            DISCORD_USER_ID: !!process.env.DISCORD_USER_ID,
-            DISCORD_BOT_TOKEN: !!process.env.DISCORD_BOT_TOKEN
-        });
-    });
 });
